@@ -24,21 +24,9 @@ class Order(models.Model):
     order_date = models.DateTimeField(default=timezone.now)
 
     def save(self, *args, **kwargs):
-        # First save the object to get an ID
-        if not self.pk:  # Only on creation
-            super().save(*args, **kwargs)
-        else:
-            # Calculate total_amount only if object already exists and has products
-            if self.pk and self.products.exists():
-                self.total_amount = sum(product.price for product in self.products.all())
-            super().save(*args, **kwargs)
-
-    def calculate_total(self):
-        """Method to calculate total after adding products"""
-        if self.pk:  # Only if order has been saved
-            self.total_amount = sum(product.price for product in self.products.all())
-            self.save(update_fields=['total_amount'])
-        return self.total_amount
+        # Calculate total_amount before saving
+        self.total_amount = sum(product.price for product in self.products.all())
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Order {self.id} - {self.customer.name}"
